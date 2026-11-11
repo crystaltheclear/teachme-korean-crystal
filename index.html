@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Stop — Korean Conversation Line</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{
+  --paper:#F3F0E8;
+  --paper-raised:#FBF9F4;
+  --ink:#20211D;
+  --ink-soft:#5B5C55;
+  --line:#D8D3C4;
+  --accent:#3A7D5C;
+  --accent-soft:#DCEBE1;
+  --radius-sm:4px;
+  --radius-md:10px;
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", sans-serif;
+}
+
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.6;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+
+/* ---------- header / route ---------- */
+.line-header{
+  position:sticky; top:0; z-index:20;
+  background:var(--paper);
+  border-bottom:2px solid var(--ink);
+}
+.line-header__top{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px 10px;
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand__mark{
+  width:34px; height:34px; border-radius:50%;
+  background:var(--ink); color:var(--paper);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:16px; flex-shrink:0;
+}
+.brand__text{display:flex; flex-direction:column; line-height:1.25;}
+.brand__text strong{font-size:16px; letter-spacing:-0.01em;}
+.brand__text span{font-size:11px; color:var(--ink-soft);}
+.progress-pill{
+  font-family:var(--mono); font-size:11px;
+  border:1px solid var(--ink); border-radius:999px;
+  padding:5px 11px; white-space:nowrap;
+}
+
+.route{
+  display:flex; align-items:center;
+  overflow-x:auto;
+  padding:16px 20px 18px;
+  gap:0;
+  scrollbar-width:thin;
+}
+.route::-webkit-scrollbar{height:4px;}
+.station-node{
+  display:flex; align-items:center; flex-shrink:0;
+  background:none; border:none; cursor:pointer;
+  padding:0; color:inherit;
+}
+.station-node__dot{
+  width:16px; height:16px; border-radius:50%;
+  border:3px solid var(--ink);
+  background:var(--paper);
+  flex-shrink:0;
+  transition:background .15s ease, transform .15s ease;
+}
+.station-node.is-visited .station-node__dot{background:var(--ink);}
+.station-node.is-active .station-node__dot{
+  transform:scale(1.3);
+  background:var(--node-color, var(--ink));
+  border-color:var(--node-color, var(--ink));
+}
+.station-node__label{
+  font-size:13px; margin:0 4px 0 8px; white-space:nowrap;
+  font-weight:600;
+}
+.station-node.is-active .station-node__label{color:var(--node-color, var(--ink));}
+.route-track{
+  width:44px; height:3px; background:var(--ink); flex-shrink:0;
+}
+
+/* ---------- home ---------- */
+.view--home{padding:28px 20px 60px; max-width:760px; margin:0 auto;}
+.home-hero__eyebrow{
+  font-family:var(--mono); font-size:12px; color:var(--ink-soft); margin:0 0 8px;
+}
+.home-hero h1{
+  font-size:clamp(26px, 5vw, 38px);
+  line-height:1.25; margin:0 0 16px; letter-spacing:-0.01em;
+}
+.home-hero__desc{color:var(--ink-soft); max-width:56ch; margin:0 0 32px;}
+
+.station-grid{display:flex; flex-direction:column; gap:12px;}
+.station-card{
+  display:flex; align-items:center; gap:16px;
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-left:6px solid var(--card-color, var(--ink));
+  border-radius:var(--radius-md);
+  padding:16px 18px;
+  cursor:pointer;
+  text-align:left;
+  width:100%;
+}
+.station-card__num{
+  font-family:var(--mono); font-size:22px; font-weight:700;
+  color:var(--card-color, var(--ink));
+  width:34px; flex-shrink:0;
+}
+.station-card__body{flex:1; min-width:0;}
+.station-card__title{margin:0 0 3px; font-size:17px; font-weight:700;}
+.station-card__desc{margin:0; font-size:13px; color:var(--ink-soft);}
+.station-card__check{
+  font-family:var(--mono); font-size:12px; color:var(--ink-soft); flex-shrink:0;
+}
+
+/* ---------- station view ---------- */
+.view--station{padding:20px 20px 70px; max-width:720px; margin:0 auto;}
+.back-btn{
+  background:none; border:none; cursor:pointer;
+  font-size:14px; color:var(--ink-soft); padding:6px 0; margin-bottom:14px;
+}
+.back-btn:hover{color:var(--ink);}
+
+.station-hero{
+  display:flex; gap:16px; align-items:flex-start;
+  padding-bottom:20px; margin-bottom:24px;
+  border-bottom:2px solid var(--ink);
+}
+.station-hero__num{
+  font-family:var(--mono); font-size:34px; font-weight:700;
+  color:var(--hero-color, var(--ink));
+}
+.station-hero__label{
+  font-family:var(--mono); font-size:11px; color:var(--ink-soft); margin:0 0 2px;
+}
+.station-hero h1{margin:0 0 6px; font-size:28px;}
+.station-hero__desc{margin:0; color:var(--ink-soft); font-size:14px;}
+
+.panel{
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  padding:20px;
+  margin-bottom:18px;
+}
+.panel h2{margin:0 0 4px; font-size:16px;}
+.panel__hint{margin:0 0 14px; font-size:13px; color:var(--ink-soft);}
+.panel--tip{background:var(--tip-color, var(--accent-soft)); border-color:transparent;}
+.panel--tip p{margin:8px 0 0; font-size:14px;}
+
+.panel__head{
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:10px; margin-bottom:14px;
+}
+.panel__head h2{margin:0;}
+.dialogue-controls{display:flex; align-items:center; gap:10px;}
+.ctrl-btn{
+  border:1px solid var(--ink); background:var(--paper);
+  border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;
+  min-width:96px;
+}
+.ctrl-btn:hover{background:var(--ink); color:var(--paper);}
+.speed-label{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px;}
+.speed-label select{
+  font-family:inherit; font-size:12px; border:1px solid var(--line);
+  border-radius:6px; padding:3px 6px; background:var(--paper);
+}
+
+.dialogue{display:flex; flex-direction:column; gap:10px;}
+.turn{
+  display:flex; gap:10px; align-items:flex-start;
+  padding:10px 12px; border-radius:var(--radius-md);
+  border:1px solid var(--line); background:var(--paper);
+  cursor:pointer;
+}
+.turn:hover{border-color:var(--ink);}
+.turn.is-speaking{border-color:var(--hero-color, var(--ink)); background:var(--tip-color, var(--accent-soft));}
+.turn__speaker{
+  font-family:var(--mono); font-size:11px; color:var(--ink-soft);
+  width:64px; flex-shrink:0; padding-top:3px;
+}
+.turn__line{flex:1; font-size:15px;}
+.turn__play{
+  flex-shrink:0; border:none; background:none; cursor:pointer;
+  font-size:14px; color:var(--ink-soft); padding:2px 4px;
+}
+.turn__play:hover{color:var(--ink);}
+
+.pattern-list{display:flex; flex-direction:column; gap:12px;}
+.pattern{
+  border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:12px 14px; background:var(--paper);
+}
+.pattern__head{font-weight:700; font-size:15px; margin-bottom:2px;}
+.pattern__note{font-size:13px; color:var(--ink-soft); margin-bottom:8px;}
+.pattern__examples{margin:0; padding-left:18px; font-size:14px; color:var(--ink);}
+.pattern__examples li{margin-bottom:2px;}
+
+/* quiz */
+.quiz-item{margin-bottom:20px;}
+.quiz-item:last-child{margin-bottom:0;}
+.quiz-item__q{font-size:15px; font-weight:600; margin-bottom:10px;}
+.quiz-options{display:flex; flex-direction:column; gap:8px;}
+.quiz-option{
+  text-align:left; border:1px solid var(--line); background:var(--paper);
+  border-radius:var(--radius-sm); padding:10px 12px; font-size:14px; cursor:pointer;
+}
+.quiz-option:hover{border-color:var(--ink);}
+.quiz-option.is-correct{border-color:var(--accent); background:var(--accent-soft);}
+.quiz-option.is-wrong{border-color:#B44; background:#F6DAD3;}
+.quiz-option[disabled]{cursor:default;}
+.quiz-explain{
+  margin:10px 0 0; font-size:13px; color:var(--ink-soft);
+  padding:8px 10px; border-left:3px solid var(--line);
+}
+
+.site-footer{
+  text-align:center; padding:24px 20px 40px;
+  font-size:12px; color:var(--ink-soft);
+}
+
+@media (max-width:520px){
+  .station-hero__num{font-size:26px;}
+  .station-hero h1{font-size:22px;}
+  .panel{padding:16px;}
+}
+
+</style>
+</head>
+<body>
+
+<header class="line-header">
+  <div class="line-header__top">
+    <div class="brand">
+      <span class="brand__mark">한</span>
+      <div class="brand__text">
+        <strong>One Stop</strong>
+        <span>Korean conversation, by situation</span>
+      </div>
+    </div>
+    <div class="progress-pill" id="progressPill">0 / 5 stops done</div>
+  </div>
+
+  <nav class="route" id="route" aria-label="Conversation situation line map">
+    <!-- stations injected by JS -->
+  </nav>
+</header>
+
+<main id="main">
+  <!-- home / intro view -->
+  <section class="view view--home" id="view-home">
+    <div class="home-hero">
+      <p class="home-hero__eyebrow">Line map</p>
+      <h1>Which stop do you<br>want to talk through today?</h1>
+      <p class="home-hero__desc">
+        Pick a stop from the line above. You'll hear a real dialogue,
+        practice saying it out loud, and break down the expressions inside it.
+        There's no translation — figuring out meaning from context is part of
+        speaking practice too.
+      </p>
+    </div>
+    <div class="station-grid" id="stationGrid">
+      <!-- station cards injected by JS -->
+    </div>
+  </section>
+
+  <!-- station detail view -->
+  <section class="view view--station" id="view-station" hidden>
+    <button class="back-btn" id="backBtn">← Back to line map</button>
+
+    <div class="station-hero" id="stationHero">
+      <span class="station-hero__num" id="stationNum">01</span>
+      <div>
+        <p class="station-hero__label" id="stationLabel">STATION</p>
+        <h1 id="stationTitle">카페</h1>
+        <p class="station-hero__desc" id="stationDesc"></p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head">
+        <h2>Dialogue</h2>
+        <div class="dialogue-controls">
+          <button class="ctrl-btn" id="playAllBtn">Play all ▶</button>
+          <label class="speed-label">
+            Speed
+            <select id="speedSelect">
+              <option value="0.8">Slow</option>
+              <option value="1" selected>Normal</option>
+              <option value="1.15">Fast</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="dialogue" id="dialogue"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Expression patterns</h2>
+      <p class="panel__hint">Pulled straight from the dialogue. Try building your own sentences with the same pattern.</p>
+      <div class="pattern-list" id="patternList"></div>
+    </div>
+
+    <div class="panel panel--tip">
+      <h2>Formal vs. informal</h2>
+      <p id="formalTip"></p>
+    </div>
+
+    <div class="panel">
+      <h2>Quick check</h2>
+      <div id="quiz"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>Practice is repetition. Stops you've visited today stay marked on the line map.</p>
+</footer>
+
+<script>
+// One Stop — situational Korean conversation data
+const STATIONS = [
+  {
+    id: "cafe",
+    num: "01",
+    color: "#E8792F",
+    colorSoft: "#FCE9D8",
+    title: "카페",
+    label: "CAFÉ",
+    desc: "Ordering a drink, choosing a size, and picking dine-in or takeout.",
+    dialogue: [
+      { speaker: "직원", line: "어서 오세요. 주문 도와드릴게요." },
+      { speaker: "손님", line: "네, 아이스 아메리카노 한 잔 주세요." },
+      { speaker: "직원", line: "사이즈는 어떤 걸로 드릴까요?" },
+      { speaker: "손님", line: "톨 사이즈로 주세요." },
+      { speaker: "직원", line: "매장에서 드시나요? 가지고 가시나요?" },
+      { speaker: "손님", line: "가지고 갈게요." },
+      { speaker: "직원", line: "네, 6,000원 결제하겠습니다. 카드 앞에 꽂아 주세요. 음료 나오면 진동벨로 알려드릴게요." },
+      { speaker: "손님", line: "네, 감사합니다." }
+    ],
+    patterns: [
+      { pattern: "~ 주세요", note: "The most basic way to make a request.", examples: ["영수증 주세요.", "얼음 조금만 주세요.", "톨 사이즈로 주세요."] },
+      { pattern: "매장에서 드시나요? / 가지고 가시나요?", note: "What staff ask to find out whether you're dining in or taking out. Answer with '먹고 갈게요' or '가지고 갈게요'.", examples: ["여기서 먹고 갈게요.", "가지고 갈게요.", "포장해 주세요."] },
+      { pattern: "~(으)면 ~ 알려드릴게요", note: "'When ~, I'll let you know.' Staff use it to promise they'll tell you when something is ready.", examples: ["음료 나오면 진동벨로 알려드릴게요.", "자리 나면 알려드릴게요.", "준비되면 알려드릴게요."] }
+    ],
+    formalTip: "Café staff and customers are strangers to each other, so both sides use polite speech. Notice the staff's endings like '-ㄹ게요' and '-겠습니다' — they sound a little more formal than the customer's '-세요' and '-ㄹ게요'. Even if you're chatting casually with a friend, you'd still order from staff politely.",
+    quiz: [
+      {
+        q: "Which expression means you're taking your order to go?",
+        options: ["여기서 먹고 갈게요", "가지고 갈게요", "카드 앞에 꽂아 주세요"],
+        answer: 1,
+        explain: "'가지고 갈게요' means 'I'll take it with me' (takeout). The staff asks '매장에서 드시나요? 가지고 가시나요?' to find out which one you want."
+      },
+      {
+        q: "Which sentence is the staff asking whether you'll eat in?",
+        options: ["사이즈는 어떤 걸로 드릴까요?", "매장에서 드시나요?", "음료 나오면 알려드릴게요."],
+        answer: 1,
+        explain: "'매장에서 드시나요?' literally asks 'Will you be eating at the store?'"
+      },
+      {
+        q: "What does '음료 나오면 진동벨로 알려드릴게요' mean?",
+        options: ["The drink costs 6,000 won.", "We'll alert you with the buzzer when your drink is ready.", "Please insert your card."],
+        answer: 1,
+        explain: "'~(으)면' means 'when/if', and '알려드릴게요' means 'I'll let you know' (polite). 진동벨 is the vibrating pager."
+      }
+    ]
+  },
+  {
+    id: "restaurant",
+    num: "02",
+    color: "#C23B22",
+    colorSoft: "#F6DAD3",
+    title: "식당",
+    label: "RESTAURANT",
+    desc: "Getting seated, ordering with a friend, and asking where the water and side dishes are.",
+    dialogue: [
+      { speaker: "점원", line: "몇 분이세요?" },
+      { speaker: "나", line: "두 명이요." },
+      { speaker: "점원", line: "네, 자리 편한 곳에 앉으세요." },
+      { speaker: "나", line: "감사합니다. 우리 뭐 먹을까?" },
+      { speaker: "친구", line: "불고기 두 개 먹을까?" },
+      { speaker: "나", line: "그래, 그러자. 저기요, 주문할게요! 불고기 두 개 주세요." },
+      { speaker: "점원", line: "네, 불고기 두 개요." },
+      { speaker: "나", line: "혹시 물이랑 반찬은 어디 있을까요?" },
+      { speaker: "점원", line: "뒤쪽에 셀프바 이용하시면 됩니다." },
+      { speaker: "나", line: "감사합니다." }
+    ],
+    patterns: [
+      { pattern: "몇 분이세요? — ~ 명이요", note: "Staff ask how many people are in your group. Answer with the number plus '명이요'.", examples: ["두 명이요.", "세 명이요.", "한 명이요."] },
+      { pattern: "저기요, 주문할게요", note: "'저기요' calls over the staff; '주문할게요' says you're ready to order. Then name the dish and the amount with '~ 주세요'.", examples: ["저기요, 주문할게요.", "불고기 두 개 주세요.", "김치찌개 하나 주세요."] },
+      { pattern: "혹시 ~ 어디 있을까요?", note: "A polite way to ask where something is.", examples: ["혹시 화장실은 어디 있을까요?", "혹시 숟가락은 어디 있을까요?"] },
+      { pattern: "~ 이용하시면 됩니다", note: "'You can use ~.' Staff use it to point you to something you can use yourself.", examples: ["셀프바 이용하시면 됩니다.", "앱으로 주문하시면 됩니다."] }
+    ],
+    formalTip: "Listen to how the same person switches speech levels in this dialogue. With the staff, it's polite: '두 명이요', '주문할게요', '주세요'. With the friend, it's casual: '우리 뭐 먹을까?', '그래, 그러자'. Staff are strangers, so you stay polite with them even while chatting casually with the friend sitting next to you.",
+    quiz: [
+      {
+        q: "The staff asks '몇 분이세요?' Which answer fits?",
+        options: ["두 명이요.", "불고기 두 개 주세요.", "뒤쪽에 있어요."],
+        answer: 0,
+        explain: "'몇 분이세요?' asks how many people. You answer with the number of people plus '명이요'."
+      },
+      {
+        q: "Which line is spoken to the friend (casual), not to the staff?",
+        options: ["주문할게요.", "우리 뭐 먹을까?", "혹시 반찬은 어디 있을까요?"],
+        answer: 1,
+        explain: "'우리 뭐 먹을까?' drops the polite '-요' ending, so it's casual speech for a friend. The other two are polite sentences for staff."
+      },
+      {
+        q: "What does '뒤쪽에 셀프바 이용하시면 됩니다' mean?",
+        options: ["The food will come soon.", "You can get water and side dishes yourself at the self-serve bar in the back.", "Please wait at the back."],
+        answer: 1,
+        explain: "'셀프바' is a self-serve bar. '이용하시면 됩니다' means 'you can use it'."
+      }
+    ]
+  },
+  {
+    id: "store",
+    num: "03",
+    color: "#2D5F8A",
+    colorSoft: "#D9E4EE",
+    title: "편의점",
+    label: "CONVENIENCE STORE",
+    desc: "Topping up a transit card, finding out you need cash, and getting some from the ATM.",
+    dialogue: [
+      { speaker: "손님", line: "교통카드 충전 되나요?" },
+      { speaker: "직원", line: "네, 얼마 충전해 드릴까요?" },
+      { speaker: "손님", line: "만 원 충전해 주세요." },
+      { speaker: "직원", line: "현금 주시면 됩니다." },
+      { speaker: "손님", line: "헉! 현금이 없어요. 카드로는 충전이 안 되나요?" },
+      { speaker: "직원", line: "네, 현금이 있어야만 교통카드 충전이 가능해요. 저기 옆에 있는 ATM에서 현금 바로 뽑으실 수 있어요." },
+      { speaker: "손님", line: "감사합니다. 여기 현금 뽑아왔어요." },
+      { speaker: "직원", line: "네, 충전해 드렸습니다. 바로 사용하시면 됩니다." }
+    ],
+    patterns: [
+      { pattern: "~ 되나요? / ~ 안 되나요?", note: "Asks whether a service or payment method is possible. '안 되나요?' asks 'Is it not possible?'", examples: ["교통카드 충전 되나요?", "카드로 결제 되나요?", "포장 안 되나요?"] },
+      { pattern: "(amount) ~ 해 주세요 / 얼마 ~ 해 드릴까요?", note: "You request a service with '해 주세요'. Staff offer it with '해 드릴까요?' and ask '얼마' (how much) when the amount matters.", examples: ["만 원 충전해 주세요.", "오천 원 충전해 주세요.", "얼마 충전해 드릴까요?"] },
+      { pattern: "~이/가 있어야만 ~ 가능해요", note: "'Only if you have ~, it's possible.' '-어야만' sets a required condition.", examples: ["현금이 있어야만 충전이 가능해요.", "회원 카드가 있어야만 할인이 가능해요."] },
+      { pattern: "~(으)시면 됩니다", note: "'You can just ~.' Staff use it to tell you the simple next step.", examples: ["현금 주시면 됩니다.", "바로 사용하시면 됩니다."] }
+    ],
+    formalTip: "Both sides stay polite here because customer and clerk are strangers. Staff use the honorific '-(으)시면 됩니다' and '-(으)ㄹ 수 있어요'. Notice '헉!' in the middle of a polite sentence. It's a casual interjection of surprise, and people use it naturally even when the rest of the sentence is polite.",
+    quiz: [
+      {
+        q: "Which question asks whether a service is available?",
+        options: ["교통카드 충전 되나요?", "만 원 충전해 주세요.", "충전해 드렸습니다."],
+        answer: 0,
+        explain: "'~ 되나요?' asks 'Is ~ possible?' It's the go-to question for checking a service or payment method."
+      },
+      {
+        q: "What does the clerk ask with '얼마 충전해 드릴까요?'",
+        options: ["How much would you like to top up?", "Which card do you have?", "Do you have cash?"],
+        answer: 0,
+        explain: "'얼마' means 'how much', and '해 드릴까요?' is the polite way to offer to do something for someone."
+      },
+      {
+        q: "What does '현금이 있어야만 충전이 가능해요' mean?",
+        options: ["You can top up with a card.", "Top-ups are possible only if you have cash.", "The ATM is out of order."],
+        answer: 1,
+        explain: "'-어야만' means 'only if' or 'must'. Cash is the required condition for topping up."
+      }
+    ]
+  },
+  {
+    id: "directions",
+    num: "04",
+    color: "#3A7D5C",
+    colorSoft: "#DCEBE1",
+    title: "길찾기",
+    label: "DIRECTIONS",
+    desc: "Asking for directions and following an explanation on unfamiliar streets.",
+    dialogue: [
+      { speaker: "행인 A", line: "저기, 죄송한데 여기서 시청역 어떻게 가요?" },
+      { speaker: "행인 B", line: "아, 시청역이요? 이 길로 쭉 가시다가 사거리에서 왼쪽으로 도세요." },
+      { speaker: "행인 A", line: "왼쪽이요? 얼마나 걸어야 돼요?" },
+      { speaker: "행인 B", line: "한 5분 정도 걸으시면 돼요. 걸어서 가시기엔 가까워요." },
+      { speaker: "행인 A", line: "혹시 버스 타는 게 더 빠를까요?" },
+      { speaker: "행인 B", line: "아니요, 이 거리면 그냥 걸어가시는 게 나아요." },
+      { speaker: "행인 A", line: "네, 정말 감사합니다!" },
+      { speaker: "행인 B", line: "네, 조심히 가세요." }
+    ],
+    patterns: [
+      { pattern: "여기서 ~ 어떻게 가요?", note: "The basic way to ask for directions.", examples: ["여기서 지하철역 어떻게 가요?", "여기서 명동 어떻게 가요?"] },
+      { pattern: "~ 다가 ~ 에서 왼쪽/오른쪽으로 도세요", note: "Used to explain a direction or route.", examples: ["쭉 가시다가 신호등에서 오른쪽으로 도세요.", "걷다가 편의점에서 왼쪽으로 도세요."] },
+      { pattern: "~ 는 게 나아요 / 더 빠를까요", note: "Used to compare options and suggest one.", examples: ["택시 타는 게 나아요.", "지금 가는 게 나을까요?"] }
+    ],
+    formalTip: "Starting with '저기, 죄송한데' when approaching a stranger on the street sounds much more natural and polite. Since both people are strangers, the reply stays polite/formal too.",
+    quiz: [
+      {
+        q: "Which phrase is a natural way to open a conversation with a stranger?",
+        options: ["저기, 죄송한데", "안녕히 가세요", "여보세요"],
+        answer: 0,
+        explain: "'저기, 죄송한데' politely opens a conversation with someone you don't know."
+      },
+      {
+        q: "Which phrase suggests the better of two options?",
+        options: ["~ 다가 ~에서 도세요", "~ 는 게 나아요", "여기서 ~ 어떻게 가요?"],
+        answer: 1,
+        explain: "'~는 게 나아요' compares options and recommends the better one."
+      }
+    ]
+  },
+  {
+    id: "friend",
+    num: "05",
+    color: "#6B4E9E",
+    colorSoft: "#E5DDEF",
+    title: "친구 약속",
+    label: "MEETING A FRIEND",
+    desc: "Checking if a friend is free, suggesting a new restaurant, and agreeing on when and where to meet.",
+    dialogue: [
+      { speaker: "민준", line: "지우야, 오늘 시간 돼?" },
+      { speaker: "지우", line: "뭐, 별거 없는데 왜?" },
+      { speaker: "민준", line: "사거리에 새로 파스타집 생겼다는데 가볼래? 후기가 꽤 괜찮아." },
+      { speaker: "지우", line: "그래! 근데 나 6시 이후에만 시간이 되는데 괜찮아?" },
+      { speaker: "민준", line: "괜찮아! 도서관에서 기다리고 있을게." },
+      { speaker: "지우", line: "그래, 그러면 내가 6시 반에 도서관 앞에 있을게." },
+      { speaker: "민준", line: "그래, 그럼 좀 있다가 만나자." }
+    ],
+    patterns: [
+      { pattern: "~ 돼? / ~ 괜찮아?", note: "Casual ways to ask a friend whether they're free or whether something works for them.", examples: ["오늘 시간 돼?", "내일 저녁 괜찮아?", "6시 이후에만 시간이 되는데 괜찮아?"] },
+      { pattern: "~다는데", note: "'I heard that ~, (so...)'. You pass along something you heard, then often add a suggestion or question.", examples: ["새로 파스타집 생겼다는데 가볼래?", "거기 맛있다는데 같이 갈래?"] },
+      { pattern: "~(으)ㄹ래?", note: "'Do you want to ~?' A casual suggestion to a friend.", examples: ["가볼래?", "같이 갈래?", "뭐 먹을래?"] },
+      { pattern: "~(으)ㄹ게", note: "'I'll ~.' Your own promise or decision, said to someone you're talking with.", examples: ["도서관에서 기다리고 있을게.", "6시 반에 도서관 앞에 있을게.", "내가 먼저 가 있을게."] }
+    ],
+    formalTip: "All of this dialogue is casual speech (반말), which is natural between close friends. When you call a friend by name, add '야' after a name ending in a vowel (지우야) and '아' after a name ending in a consonant (민준아). If there's an age gap or you haven't started speaking casually yet, it's polite to ask first: '우리 말 놓을까?' (should we drop the formalities?).",
+    quiz: [
+      {
+        q: "How do you call a friend named 지우 in casual speech?",
+        options: ["지우야", "지우 씨", "지우 선생님"],
+        answer: 0,
+        explain: "Adding '야' after a vowel-ending name (지우야) is the casual way to call a friend. After a consonant-ending name, use '아' (민준아)."
+      },
+      {
+        q: "What does '새로 파스타집 생겼다는데' mean?",
+        options: ["I heard a new pasta place opened.", "I opened a pasta place.", "The pasta place is closed."],
+        answer: 0,
+        explain: "'~다는데' passes along something you heard, and it often leads into a suggestion like '가볼래?'."
+      },
+      {
+        q: "Which ending expresses your own promise, 'I'll ~'?",
+        options: ["~(으)ㄹ게", "~(으)ㄹ래?", "~ 돼?"],
+        answer: 0,
+        explain: "'~(으)ㄹ게' states what you'll do, as in '기다리고 있을게' (I'll be waiting). '~(으)ㄹ래?' is a question that asks what the other person wants."
+      }
+    ]
+  }
+];
+
+</script>
+<script>
+(function(){
+  const STORAGE_KEY = "onestop_visited";
+  const route = document.getElementById("route");
+  const stationGrid = document.getElementById("stationGrid");
+  const viewHome = document.getElementById("view-home");
+  const viewStation = document.getElementById("view-station");
+  const backBtn = document.getElementById("backBtn");
+  const progressPill = document.getElementById("progressPill");
+
+  function getVisited(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    catch(e){ return []; }
+  }
+  function markVisited(id){
+    const v = getVisited();
+    if(!v.includes(id)){
+      v.push(id);
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); }catch(e){}
+    }
+    renderProgress();
+  }
+  function renderProgress(){
+    const count = getVisited().length;
+    progressPill.textContent = `${count} / ${STATIONS.length} stops done`;
+  }
+
+  // ---------- build route nav + home cards ----------
+  function buildRoute(){
+    route.innerHTML = "";
+    STATIONS.forEach((s, i) => {
+      const btn = document.createElement("button");
+      btn.className = "station-node";
+      btn.style.setProperty("--node-color", s.color);
+      btn.dataset.id = s.id;
+      btn.innerHTML = `<span class="station-node__dot"></span><span class="station-node__label">${s.title}</span>`;
+      btn.addEventListener("click", () => openStation(s.id));
+      route.appendChild(btn);
+      if(i < STATIONS.length - 1){
+        const track = document.createElement("div");
+        track.className = "route-track";
+        route.appendChild(track);
+      }
+    });
+    syncRouteState();
+  }
+
+  function syncRouteState(activeId){
+    const visited = getVisited();
+    route.querySelectorAll(".station-node").forEach(node => {
+      const id = node.dataset.id;
+      node.classList.toggle("is-visited", visited.includes(id));
+      node.classList.toggle("is-active", id === activeId);
+    });
+  }
+
+  function buildHomeCards(){
+    stationGrid.innerHTML = "";
+    const visited = getVisited();
+    STATIONS.forEach(s => {
+      const card = document.createElement("button");
+      card.className = "station-card";
+      card.style.setProperty("--card-color", s.color);
+      card.innerHTML = `
+        <span class="station-card__num">${s.num}</span>
+        <span class="station-card__body">
+          <p class="station-card__title">${s.title}</p>
+          <p class="station-card__desc">${s.desc}</p>
+        </span>
+        <span class="station-card__check">${visited.includes(s.id) ? "done" : ""}</span>
+      `;
+      card.addEventListener("click", () => openStation(s.id));
+      stationGrid.appendChild(card);
+    });
+  }
+
+  // ---------- station detail ----------
+  let currentStation = null;
+
+  function openStation(id){
+    const s = STATIONS.find(st => st.id === id);
+    if(!s) return;
+    stopSpeaking();
+    currentStation = s;
+    viewHome.hidden = true;
+    viewStation.hidden = false;
+    window.scrollTo(0, 0);
+
+    document.documentElement.style.setProperty("--hero-color", s.color);
+    document.getElementById("stationNum").textContent = s.num;
+    document.getElementById("stationNum").style.color = s.color;
+    document.getElementById("stationLabel").textContent = s.label;
+    document.getElementById("stationTitle").textContent = s.title;
+    document.getElementById("stationDesc").textContent = s.desc;
+
+    const panelTip = document.querySelector(".panel--tip");
+    panelTip.style.setProperty("--tip-color", s.colorSoft);
+    document.getElementById("formalTip").textContent = s.formalTip;
+
+    renderDialogue(s);
+    renderPatterns(s);
+    renderQuiz(s);
+
+    syncRouteState(s.id);
+    markVisited(s.id);
+  }
+
+  backBtn.addEventListener("click", () => {
+    stopSpeaking();
+    viewStation.hidden = true;
+    viewHome.hidden = false;
+    buildHomeCards();
+    syncRouteState();
+    window.scrollTo(0, 0);
+  });
+
+  function renderDialogue(s){
+    const wrap = document.getElementById("dialogue");
+    wrap.innerHTML = "";
+    s.dialogue.forEach((turn, idx) => {
+      const el = document.createElement("div");
+      el.className = "turn";
+      el.dataset.idx = idx;
+      el.innerHTML = `
+        <span class="turn__speaker">${turn.speaker}</span>
+        <span class="turn__line">${turn.line}</span>
+        <button class="turn__play" aria-label="Listen">▶</button>
+      `;
+      el.addEventListener("click", () => speakTurn(s, idx));
+      wrap.appendChild(el);
+    });
+  }
+
+  function renderPatterns(s){
+    const wrap = document.getElementById("patternList");
+    wrap.innerHTML = "";
+    s.patterns.forEach(p => {
+      const el = document.createElement("div");
+      el.className = "pattern";
+      el.innerHTML = `
+        <div class="pattern__head">${p.pattern}</div>
+        <div class="pattern__note">${p.note}</div>
+        <ul class="pattern__examples">${p.examples.map(e => `<li>${e}</li>`).join("")}</ul>
+      `;
+      wrap.appendChild(el);
+    });
+  }
+
+  function renderQuiz(s){
+    const wrap = document.getElementById("quiz");
+    wrap.innerHTML = "";
+    s.quiz.forEach((q, qi) => {
+      const item = document.createElement("div");
+      item.className = "quiz-item";
+      const optsHtml = q.options.map((opt, oi) =>
+        `<button class="quiz-option" data-oi="${oi}">${opt}</button>`
+      ).join("");
+      item.innerHTML = `
+        <p class="quiz-item__q">${qi + 1}. ${q.q}</p>
+        <div class="quiz-options">${optsHtml}</div>
+      `;
+      wrap.appendChild(item);
+
+      const optionBtns = item.querySelectorAll(".quiz-option");
+      optionBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          if(item.dataset.answered) return;
+          item.dataset.answered = "true";
+          const oi = Number(btn.dataset.oi);
+          optionBtns.forEach(b => b.disabled = true);
+          if(oi === q.answer){
+            btn.classList.add("is-correct");
+          } else {
+            btn.classList.add("is-wrong");
+            optionBtns[q.answer].classList.add("is-correct");
+          }
+          const explain = document.createElement("p");
+          explain.className = "quiz-explain";
+          explain.textContent = q.explain;
+          item.appendChild(explain);
+        });
+      });
+    });
+  }
+
+  // ---------- speech ----------
+  let koVoices = [];   // all Korean voices the browser exposes
+  let koVoice = null;  // single fallback voice
+  let isPlayingAll = false;
+  let playToken = 0;   // bumped on every stop, so an in-flight "play all" chain knows to quit
+  // Used when only one Korean voice exists: shift pitch so speakers still sound different.
+  const PITCH_BY_SPEAKER = [0.85, 1.3, 1.0, 1.15];
+
+  function pickVoice(){
+    const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    koVoices = voices.filter(v => v.lang && (v.lang === "ko-KR" || v.lang.startsWith("ko")));
+    koVoice = koVoices[0] || null;
+  }
+  if(window.speechSynthesis){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+  }
+
+  function speakerIndex(station, speaker){
+    if(!station._speakerOrder){
+      station._speakerOrder = [...new Set(station.dialogue.map(t => t.speaker))];
+    }
+    const idx = station._speakerOrder.indexOf(speaker);
+    return idx < 0 ? 0 : idx;
+  }
+
+  // Each distinct speaker gets its own voice. With only one Korean voice available,
+  // the pitch is shifted per speaker instead.
+  function assignVoice(utter, station, idx){
+    const sIdx = speakerIndex(station, station.dialogue[idx].speaker);
+    if(koVoices.length > 1){
+      utter.voice = koVoices[sIdx % koVoices.length];
+    } else {
+      if(koVoice) utter.voice = koVoice;
+      utter.pitch = PITCH_BY_SPEAKER[sIdx % PITCH_BY_SPEAKER.length];
+    }
+  }
+
+  function updatePlayAllBtn(){
+    const btn = document.getElementById("playAllBtn");
+    if(btn) btn.textContent = isPlayingAll ? "Stop ■" : "Play all ▶";
+  }
+
+  function stopSpeaking(){
+    playToken++;
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+    document.querySelectorAll(".turn.is-speaking").forEach(t => t.classList.remove("is-speaking"));
+    isPlayingAll = false;
+    updatePlayAllBtn();
+  }
+
+  function getRate(){
+    const sel = document.getElementById("speedSelect");
+    return sel ? Number(sel.value) : 1;
+  }
+
+  function speakTurn(s, idx){
+    if(!window.speechSynthesis){
+      alert("This browser doesn't support speech playback.");
+      return;
+    }
+    stopSpeaking();
+    const turn = s.dialogue[idx];
+    const el = document.querySelector(`.turn[data-idx="${idx}"]`);
+    const utter = new SpeechSynthesisUtterance(turn.line);
+    utter.lang = "ko-KR";
+    assignVoice(utter, s, idx);
+    utter.rate = getRate();
+    utter.onstart = () => { if(el) el.classList.add("is-speaking"); };
+    utter.onend = () => { if(el) el.classList.remove("is-speaking"); };
+    window.speechSynthesis.speak(utter);
+  }
+
+  document.getElementById("playAllBtn").addEventListener("click", () => {
+    if(isPlayingAll){
+      stopSpeaking();
+      return;
+    }
+    if(!currentStation) return;
+    if(!window.speechSynthesis){
+      alert("This browser doesn't support speech playback.");
+      return;
+    }
+    stopSpeaking();
+    isPlayingAll = true;
+    updatePlayAllBtn();
+    const myToken = playToken;
+    const s = currentStation;
+    let i = 0;
+    function next(){
+      if(myToken !== playToken) return;
+      if(i >= s.dialogue.length){
+        isPlayingAll = false;
+        updatePlayAllBtn();
+        return;
+      }
+      const turn = s.dialogue[i];
+      const el = document.querySelector(`.turn[data-idx="${i}"]`);
+      const utter = new SpeechSynthesisUtterance(turn.line);
+      utter.lang = "ko-KR";
+      assignVoice(utter, s, i);
+      utter.rate = getRate();
+      utter.onstart = () => { if(el) el.classList.add("is-speaking"); };
+      utter.onend = () => {
+        if(el) el.classList.remove("is-speaking");
+        if(myToken !== playToken) return;
+        i++;
+        next();
+      };
+      window.speechSynthesis.speak(utter);
+    }
+    next();
+  });
+
+  // ---------- init ----------
+  buildRoute();
+  buildHomeCards();
+  renderProgress();
+})();
+
+</script>
+</body>
+</html>
